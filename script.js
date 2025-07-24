@@ -1,32 +1,58 @@
-// Wait for the DOM to be fully loaded
+// Configuration
+const CONFIG = {
+    // ... existing config ...
+};
+
+// Main Initialization
 document.addEventListener('DOMContentLoaded', () => {
-    // Detect if the device is mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const isMobile = isMobileDevice();
     
-    // Create fewer particles on mobile
-    createBackgroundParticles(isMobile);
+    initializeBackground(isMobile);
+    initializeAppCards(isMobile);
+    initializeVideo();
+});
+
+// Video Initialization
+function initializeVideo() {
+    const video = document.querySelector('.background-video');
+    if (!video) return;
+
+    // Remove muted attribute to allow sound
+    video.removeAttribute('muted');
     
-    // Initialize image loading effects
-    initImageLoading();
+    // Try to play video with sound
+    const playPromise = video.play();
     
-    // Initialize animations with mobile optimization
-    initAppCardAnimations(isMobile);
-    
-    // Add interactive effects to app cards
-    initAppCardInteractions(isMobile);
-    
-    // Create typing effect for the tagline (faster on mobile)
-    createTypingEffect(isMobile);
-    
-    // Handle orientation changes for mobile
-    if (isMobile) {
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                refreshAppCardAnimations();
-            }, 200);
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            // Video is playing with sound
+            console.log('Video playing with sound');
+        }).catch(error => {
+            // Auto-play with sound was prevented
+            console.log('Autoplay with sound prevented:', error);
+            
+            // Add muted attribute and try again
+            video.muted = true;
+            video.play().catch(error => {
+                console.log('Autoplay even with mute prevented:', error);
+            });
         });
     }
-});
+
+    // Add click handler to unmute
+    video.addEventListener('click', () => {
+        if (video.muted) {
+            video.muted = false;
+        }
+    });
+
+    // Handle visibility change to prevent stopping when tab is inactive
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            video.play();
+        }
+    });
+}
 
 // Function to handle image loading effects
 function initImageLoading() {
